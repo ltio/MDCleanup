@@ -4,9 +4,12 @@ import os, glob, re
 # Step 1 (Optional) : Iterate through each file in the folder and open merge each file with one another till you get a full text file
 
 # Step 2 : Read each line and re-write it to a new file. There is no edit
-
-combined_file = open('OUTFILE', 'r+', encoding = "utf8")
-output_file = open('finish','w+')
+try:
+    combined_file = open('OUTFILE', 'r+', encoding = "utf8")
+    output_file = open('finish','w+')
+except:
+    combined_file = open('OUTFILE', 'r+', encoding = "utf8")
+    output_file = open('finish','w+', encoding = "utf8")
 
 # HTML Tags. Note that you need the newlines (\n) here because if tags are next to one another, it won't be reflected on the site
 open_article = '<article>\n\n'
