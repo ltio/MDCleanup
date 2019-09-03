@@ -3,7 +3,9 @@ import os, glob, re
 
 # Step 1 (Optional) : Iterate through each file in the folder and open merge each file with one another till you get a full text file
 
-# Step 2 : Read each line and re-write it to a new file. There is no edit
+    # Mdmerge
+
+# Step 2 : Read each line and re-write it to a new file
 try:
     combined_file = open('OUTFILE', 'r+', encoding = "utf8")
     output_file = open('finish','w+')
@@ -21,18 +23,24 @@ close_chapter = '</chapter>\n\n'
 chapter_open = False
 article_open = False
 
-# Step 3 : Look for keywords and make changes to each sentence
+# Step 3 : Scan through each edit_sentence
 for sentence in combined_file:
 
     edit_sentence = sentence
 
+    # Remove redunant header/text
+    edit_sentence = edit_sentence.replace('#', '')
+    edit_sentence = edit_sentence.replace('&nbsp', ' ')
+
     # 3.1 Converting headers
-    
-    # Header 1
-    if 'CHAPTER' in edit_sentence:
-        
-        # Before editing the CHAPTER's tag, insert open and close chapter
-        
+
+    chapter_header_one = 'CHAPTER'
+    # Need a solution for this 'Chapter' header
+    # chapter_header_two = 'Chapter'
+
+    # Header 1, check for variants
+    if chapter_header_one in edit_sentence:
+
         # If chapter is currently opened, check if article is closed
         if (chapter_open):
             # If article is not closed (open), close article then chapter and then open chapter again
@@ -51,86 +59,128 @@ for sentence in combined_file:
         else:
             output_file.write(open_chapter)
             chapter_open = True
-        
+
         # Check if header is correct, header 1
         if edit_sentence.count('#') != 1:
-            edit_sentence = '#' + edit_sentence.replace('#','')
-    
-    article_header_one = 'ARTICLE'
-    article_header_two = 'Article'
+            edit_sentence = '#' + edit_sentence.replace('# ','')
+
+    article_header_one = ' ARTICLE'
+    article_header_two = ' Article'
     article_header_three = 'article'
-    
-    # Header 2 , check for variants
+
+    # Header 2, check for variants
     if article_header_one or article_header_two or article_header_three in edit_sentence:
-        
+
         # Check if it is a HTML tag, just add a new line to ensure that tag is invoked
-        if (re.match('<article>', edit_sentence)):
+        if (re.search('<article>', edit_sentence)):
             edit_sentence = edit_sentence + '\n'
             article_open = True
         else:
-            # If article tag not declared, declare one
-            if ((re.match(article_header_two, edit_sentence) or re.search(article_header_one, edit_sentence)) and article_open):
+            # If article is opened
+            if ((re.match(article_header_one, edit_sentence) or re.match(article_header_two, edit_sentence)) and article_open):
                 output_file.write(close_article)
-                article_open = False
                 output_file.write(open_article)
-                
+
                 # Check if header is correct, header 2
                 if edit_sentence.count('#') == 0:
                     edit_sentence = '## ' + edit_sentence
-                
+
+                # Redundant but as fail safe
                 if edit_sentence.count('#') != 2:
                     edit_sentence = '##' + edit_sentence.replace('#','')
-            
-            elif (re.search(article_header_one, edit_sentence)):
+            # If article is closed
+            elif ((re.match(article_header_one, edit_sentence) or re.match(article_header_two, edit_sentence)) and not article_open):
                 output_file.write(open_article)
                 article_open = True
-                
-        # This is to ensure that the correct MD format 
-        try:
-            if (re.match('Article', edit_sentence) or re.match(' Article', edit_sentence)):
-                if (edit_sentence.split()[2][0].isupper()):
-                    edit_sentence = '## ' + edit_sentence
-        except IndexError:
-            edit_sentence = '## ' + edit_sentence
-            
-    # 3.2 If the current sentence has header tags but is not a header
-    if ('#' in edit_sentence):
-        if not (article_header_one in edit_sentence or 'CHAPTER' in edit_sentence or article_header_two in edit_sentence or ' Article' in edit_sentence):
-            edit_sentence = edit_sentence.replace('#','')
-        
-    # 3.3 End/Footnotes
-    if (re.search("\d-\d", edit_sentence) != None):
 
-        # If there is, then find the no. of the end/footnote
-        end_footnote_one = re.search("\d-\d", edit_sentence).group()
-        
-        # If does not match, means its a endnote not a footnote
-        if (re.match("\d[ -]\d", edit_sentence)) == None :
-            edit_sentence = edit_sentence.replace(end_footnote_one, '[^' + end_footnote_one + ']')
-        else:
-            edit_sentence = edit_sentence.replace(end_footnote_one, '[^' + end_footnote_one + ']:')
-    
-    # This will allow (E.G. (^1) / ^1) from anywhere if the page to be rectified into [^1]
-    if (re.search('\^\d', edit_sentence) != None):
-        
-        if (re.search('\(\^\d\)', edit_sentence) != None):
-            wrong_note = re.search('\(\^\d\)', edit_sentence).group()
-            note_number = re.search('\^\d', edit_sentence).group()
-            edit_sentence = edit_sentence.replace(wrong_note, '[' + note_number + ']')
-        # This checks for ^1, but [^1] and [^1]: also fits the bill so we need to prevent them from adding []
-        elif (re.search('[^\d]', edit_sentence) == None and re.search('[^\d]:', edit_sentence) == None):
-            end_footnote_two = re.search('\^\d', edit_sentence).group()
-            edit_sentence = edit_sentence.replace(end_footnote_two, '[' + end_footnote_two + ']')
-        
-    # This will retify those footnotes missing the ':'
-    if (re.match('\[\^\d\]', edit_sentence) != None):
-    
-        end_footnote_three = re.search('\[\^\d\]', edit_sentence).group()
-        edit_sentence = edit_sentence.replace(end_footnote_three, end_footnote_three + ':')
-    
+                # Check if header is correct, header 2
+                if edit_sentence.count('#') == 0:
+                    edit_sentence = '## ' + edit_sentence
+
+                # Redundant but as fail safe
+                if edit_sentence.count('#') != 2:
+                    edit_sentence = '##' + edit_sentence.replace('#','')
+
+        # This is to ensure that the correct MD format
+        # try:
+            # if (re.match('Article', edit_sentence) or re.match(' Article', edit_sentence)):
+                # if (edit_sentence.split()[2][0].isupper()):
+                    # edit_sentence = '## ' + edit_sentence
+        # except IndexError:
+            # edit_sentence = '## ' + edit_sentence
+
+    # 3.2 End/Footnotes
+    # If footnote is found
+    if (re.match('[\(\[]*\^\d{1,2}[-\s]*\d{0,2}[\)\]]*:*' ,edit_sentence)):
+
+        # Save note for checking
+        note = re.match('[\(\[]*\^\d{1,2}[-\s]*\d{0,2}[\)\]]*:*' ,edit_sentence).group()
+        new_note = note
+
+        # Check if square bracket exist instead of rounded
+        if (re.search('\(', new_note) or re.search('\)', new_note)):
+            new_note = new_note.replace('(', '[')
+            new_note = new_note.replace(')', ']')
+
+        # Check if square bracket is implemented, if not add it in
+        if not (re.search('\[', new_note) and re.search('\]', new_note)):
+            # This is to remove any case where only one of the bracket is implement
+            new_note = new_note.replace('[', '')
+            new_note = new_note.replace(']', '')
+            new_note = '[' + new_note + ']'
+
+        # This will not work for endnote as it will affect (E.G. 2. word)
+        # if not (re.search('\^', new_note)):
+            # new_note = new_note.replace('[', '[^')
+
+        if not (re.search(':', new_note)):
+            new_note += ':'
+
+        # Check if note contains space and replace space with -
+        if not (re.search('\s\d{1,2}', new_note)):
+            new_note = new_note.replace(' ', '')
+
+        if (re.search('\s\d{1,2}', new_note)):
+            new_note = new_note.replace(' ', '-')
+
+        edit_sentence = edit_sentence.replace(note, new_note)
+    # If endnote is found
+    elif (re.search('[\(\[]*\^\d{1,2}[-\s]*\d{0,2}[\)\]]*:*' ,edit_sentence)):
+        # Save note for checking
+        note = re.search('[\(\[]*\^\d{1,2}[-\s]*\d{0,2}[\)\]]*:*' ,edit_sentence).group()
+        new_note = note
+
+        # Check if square bracket exist instead of rounded
+        if (re.search('\(', new_note) or re.search('\)', new_note)):
+            print ('b')
+            new_note = new_note.replace('(', '[')
+            new_note = new_note.replace(')', ']')
+
+        # Check if square bracket is implemented, if not add it in
+        if not (re.search('\[', new_note) and re.search('\]', new_note)):
+            # This is to remove any case where only one of the bracket is implement
+            new_note = new_note.replace('[', '')
+            new_note = new_note.replace(']', '')
+            new_note = '[' + new_note + ']'
+
+        # This will not work for endnote as it will affect (E.G. word 2.1 word)
+        # if not (re.search('\^', new_note)):
+            # new_note = new_note.replace('[', '[^')
+
+        if (re.search(':', new_note)):
+            new_note = new_note.replace(':', '')
+
+        # Check if note contains space and replace space with -
+        if not (re.search('\s\d{1,2}', new_note)):
+            new_note = new_note.replace(' ', '')
+
+        if (re.search('\s\d{1,2}', new_note)):
+            new_note = new_note.replace(' ', '-')
+
+        edit_sentence = edit_sentence.replace(note, new_note)
+
     output_file.write(edit_sentence)
 
-# Best practice to close, if there are too many files left unopened it will consume resources on your local PC 
+# Best practice to close, if there are too many files left unopened it will consume resources on your local PC
 combined_file.close()
 output_file.close()
-
