@@ -6,12 +6,8 @@ import os, glob, re
     # Mdmerge
 
 # Step 2 : Read each line and re-write it to a new file
-try:
-    combined_file = open('OUTFILE', 'r+', encoding = "utf8")
-    output_file = open('finish','w+')
-except:
-    combined_file = open('OUTFILE', 'r+', encoding = "utf8")
-    output_file = open('finish','w+', encoding = "utf8")
+combined_file = open('OUTFILE', 'r+', encoding = "utf8")
+output_file = open('finish','w+', encoding = "utf8")
 
 # HTML Tags. Note that you need the newlines (\n) here because if tags are next to one another, it won't be reflected on the site
 open_article = '<article>\n\n'
