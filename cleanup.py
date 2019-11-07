@@ -1,11 +1,7 @@
-# Miscellaneous operating system interfaces
+# Import general library
 import os, glob, re
 
-# Step 1 (Optional) : Iterate through each file in the folder and open merge each file with one another till you get a full text file
-
-    # Mdmerge
-
-# Step 2 : Read each line and re-write it to a new file
+# Open file
 combined_file = open('OUTFILE', 'r+', encoding = "utf8")
 output_file = open('finish','w+', encoding = "utf8")
 
@@ -27,6 +23,9 @@ for sentence in combined_file:
     # Remove redunant header/text
     edit_sentence = edit_sentence.replace('#', '')
     edit_sentence = edit_sentence.replace('&nbsp', ' ')
+    if len(edit_sentence) > 1:
+        # Strip leading white spaces
+        edit_sentence = edit_sentence.lstrip()
 
     # 3.1 Converting headers
 
@@ -58,10 +57,10 @@ for sentence in combined_file:
 
         # Check if header is correct, header 1
         if edit_sentence.count('#') != 1:
-            edit_sentence = '#' + edit_sentence.replace('# ','')
+            edit_sentence = '# ' + edit_sentence.replace('# ','')
 
-    article_header_one = ' ARTICLE'
-    article_header_two = ' Article'
+    article_header_one = 'ARTICLE'
+    article_header_two = 'Article'
     article_header_three = 'article'
 
     # Header 2, check for variants
@@ -96,14 +95,6 @@ for sentence in combined_file:
                 # Redundant but as fail safe
                 if edit_sentence.count('#') != 2:
                     edit_sentence = '##' + edit_sentence.replace('#','')
-
-        # This is to ensure that the correct MD format
-        # try:
-            # if (re.match('Article', edit_sentence) or re.match(' Article', edit_sentence)):
-                # if (edit_sentence.split()[2][0].isupper()):
-                    # edit_sentence = '## ' + edit_sentence
-        # except IndexError:
-            # edit_sentence = '## ' + edit_sentence
 
     # 3.2 End/Footnotes
     # If footnote is found
@@ -148,7 +139,6 @@ for sentence in combined_file:
 
         # Check if square bracket exist instead of rounded
         if (re.search('\(', new_note) or re.search('\)', new_note)):
-            print ('b')
             new_note = new_note.replace('(', '[')
             new_note = new_note.replace(')', ']')
 
@@ -180,3 +170,11 @@ for sentence in combined_file:
 # Best practice to close, if there are too many files left unopened it will consume resources on your local PC
 combined_file.close()
 output_file.close()
+
+# Might be useful codes
+# Assume anything with chapter/article + : is a h1/h2
+# if re.search("chapter", edit_sentence, re.IGNORECASE) and re.search(":", edit_sentence, re.IGNORECASE):
+    # edit_sentence = "# " + edit_sentence
+
+# if re.search("article", edit_sentence, re.IGNORECASE) and re.search(":", edit_sentence, re.IGNORECASE):
+    # edit_sentence = "## " + edit_sentence
